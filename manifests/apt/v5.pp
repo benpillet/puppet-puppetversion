@@ -3,8 +3,11 @@ class puppetversion::apt::v5(
   $apt_repos = 'main puppet5',
   $manage_repo = true,
 ) {
-  if $puppetversion::manage_repo {
-    apt::source { 'puppet5':
+
+  $puppet_packages = ['puppet-agent',]
+
+  if $manage_repo {
+    apt::source { 'puppetlabs':
       location => $apt_location,
       repos    => $apt_repos,
       key      => {
@@ -14,4 +17,19 @@ class puppetversion::apt::v5(
     }
   }
 
+  $package_require = $manage_repo ? {
+    true    => Apt::Source['puppetlabs'],
+    default => undef,
+  }
+
+  if $::lsbdistrelease == '16.04' {
+    $full_version = '5.5.10-1'
+  } else {
+    $full_version = '5.5.10'
+  }
+
+  package { $puppet_packages:
+    ensure  => $full_version,
+    require => $package_require,
+  }
 }
